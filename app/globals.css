@@ -1,0 +1,866 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================== TAILWIND STYLES */
+@layer base {
+  /* Remove scrollbar */
+  .remove-scrollbar::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    border-radius: 0px;
+  }
+
+  .remove-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .remove-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 0px;
+  }
+
+  .remove-scrollbar::-webkit-scrollbar-thumb:hover {
+    /* background: #1e2238; */
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  /* ===== UTILITIES */
+  .sidebar {
+    @apply remove-scrollbar w-full max-w-72 flex-col overflow-auto bg-black-800 px-7 py-10;
+  }
+
+  .left-sidebar {
+    @apply hidden lg:flex;
+  }
+
+  .right-sidebar {
+    @apply hidden xl:flex;
+  }
+
+  .clip-text {
+    @apply bg-clip-text text-transparent;
+  }
+
+  .bg-image {
+    @apply bg-black-900 bg-light-rays bg-cover bg-no-repeat;
+  }
+
+  .header {
+    @apply text-32-bold md:text-36-bold;
+  }
+
+  .sub-header {
+    @apply text-18-bold md:text-24-bold;
+  }
+
+  .container {
+    @apply relative flex-1 overflow-y-auto px-[5%];
+  }
+
+  .sub-container {
+    @apply mx-auto flex size-full flex-col py-10;
+  }
+
+  .side-img {
+    @apply hidden h-full object-cover md:block;
+  }
+
+  .copyright {
+    @apply text-14-regular justify-items-end text-center text-dark-600 xl:text-left;
+  }
+
+  /* ==== SUCCESS */
+  .success-img {
+    @apply m-auto flex flex-1 flex-col items-center justify-between gap-10 py-10;
+  }
+
+  .request-details {
+    @apply flex w-full flex-col items-center gap-8 border-y-2 border-dark-400 py-8 md:w-fit md:flex-row;
+  }
+
+  /* ===== ADMIN */
+  .admin-header {
+    @apply sticky top-3 z-20 mx-3 flex items-center justify-between rounded-2xl bg-dark-200 px-[5%] py-5 shadow-lg xl:px-12;
+  }
+
+  .admin-main {
+    @apply flex flex-col items-center space-y-6 px-[5%] pb-12 xl:space-y-12 xl:px-12;
+  }
+
+  .admin-stat {
+    @apply flex w-full flex-col justify-between gap-5 sm:flex-row xl:gap-10;
+  }
+
+  /* ==== FORM */
+  .radio-group {
+    @apply flex h-full flex-1 items-center gap-2 rounded-md border border-dashed border-dark-500 bg-dark-400 p-3;
+  }
+
+  .checkbox-label {
+    @apply cursor-pointer text-sm font-medium text-dark-700 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 md:leading-none;
+  }
+
+  /* ==== File Upload */
+  .file-upload {
+    @apply text-12-regular flex cursor-pointer  flex-col items-center justify-center gap-3 rounded-md border border-dashed border-dark-500 bg-dark-400 p-5;
+  }
+
+  .file-upload_label {
+    @apply flex flex-col justify-center gap-2 text-center text-dark-600;
+  }
+
+  /* ==== Stat Card */
+  .stat-card {
+    @apply flex flex-1 flex-col gap-6 rounded-2xl bg-cover p-6 shadow-lg;
+  }
+
+  /* ==== Status Badge */
+  .status-badge {
+    @apply flex w-fit items-center gap-2 rounded-full px-4 py-2;
+  }
+
+  /* Data Table */
+  .data-table {
+    @apply z-10 w-full overflow-hidden rounded-lg border border-dark-400 shadow-lg;
+  }
+
+  .table-actions {
+    @apply flex w-full items-center justify-between space-x-2 p-4;
+  }
+
+  /* ===== ALIGNMENTS */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  /* ===== TYPOGRAPHY */
+  .text-36-bold {
+    @apply text-[36px] leading-[40px] font-bold;
+  }
+
+  .text-24-bold {
+    @apply text-[24px] leading-[28px] font-bold;
+  }
+
+  .text-32-bold {
+    @apply text-[32px] leading-[36px] font-bold;
+  }
+
+  .text-18-bold {
+    @apply text-[18px] leading-[24px] font-bold;
+  }
+
+  .text-16-semibold {
+    @apply text-[16px] leading-[20px] font-semibold;
+  }
+
+  .text-16-regular {
+    @apply text-[16px] leading-[20px] font-normal;
+  }
+
+  .text-14-medium {
+    @apply text-[14px] leading-[18px] font-medium;
+  }
+
+  .text-14-regular {
+    @apply text-[14px] leading-[18px] font-normal;
+  }
+
+  .text-12-regular {
+    @apply text-[12px] leading-[16px] font-normal;
+  }
+
+  .text-12-semibold {
+    @apply text-[12px] leading-[16px] font-semibold;
+  }
+
+  /* =====  SHADCN OVERRIDES */
+  .shad-primary-btn {
+    @apply bg-green-500 text-white !important;
+  }
+
+  .shad-danger-btn {
+    @apply bg-red-700 text-white !important;
+  }
+
+  .shad-gray-btn {
+    @apply border border-dark-500 cursor-pointer bg-dark-400 text-white !important;
+  }
+
+  .shad-input-label {
+    @apply text-14-medium text-dark-700 !important;
+  }
+
+  .shad-input {
+    @apply bg-dark-400 placeholder:text-dark-600 border-dark-500 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 !important;
+  }
+
+  .shad-input-icon {
+    @apply bg-dark-400 placeholder:text-dark-600 border-dark-500 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 !important;
+  }
+
+  .shad-textArea {
+    @apply bg-dark-400 placeholder:text-dark-600 border-dark-500 focus-visible:ring-0 focus-visible:ring-offset-0 !important;
+  }
+
+  .shad-combobox-item {
+    @apply data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 !important;
+  }
+
+  .shad-combobox-trigger {
+    @apply h-11 !important;
+  }
+
+  .shad-select-trigger {
+    @apply bg-dark-400  placeholder:text-dark-600 border-dark-500 h-11 focus:ring-0 focus:ring-offset-0 !important;
+  }
+
+  .shad-select-content {
+    @apply bg-dark-400 border-dark-500 !important;
+  }
+
+  .shad-dialog {
+    @apply bg-dark-400 border-dark-500 !important;
+  }
+
+  .shad-dialog button {
+    @apply focus:ring-0 focus:ring-offset-0 focus-visible:border-none focus-visible:outline-none focus-visible:ring-transparent focus-visible:ring-offset-0 !important;
+  }
+
+  .shad-error {
+    @apply text-red-400 !important;
+  }
+
+  .shad-table {
+    @apply rounded-lg overflow-hidden !important;
+  }
+
+  .shad-table-row-header {
+    @apply border-b border-dark-400 text-light-200 hover:bg-transparent !important;
+  }
+
+  .shad-table-row {
+    @apply border-b border-dark-400 text-light-200 !important;
+  }
+
+  .shad-otp {
+    @apply w-full flex justify-between !important;
+  }
+
+  .shad-otp-slot {
+    @apply text-36-bold justify-center flex border border-dark-500 rounded-lg size-16 gap-4 !important;
+  }
+
+  .shad-alert-dialog {
+    @apply space-y-5 bg-dark-400 border-dark-500 outline-none !important;
+  }
+
+  .shad-sheet-content button {
+    @apply top-2 focus:ring-0 focus:ring-offset-0 focus-visible:border-none focus-visible:outline-none focus-visible:ring-transparent focus-visible:ring-offset-0 !important;
+  }
+
+  /* =====  REACT PHONE NUMBER INPUT OVERRIDES */
+  .input-phone {
+    @apply mt-2 h-11 rounded-md px-3 text-sm border bg-dark-400 placeholder:text-dark-600 border-dark-500 !important;
+  }
+
+  /* =====  REACT DATE PICKER OVERRIDES */
+  .date-picker {
+    @apply overflow-hidden border-transparent w-full placeholder:text-dark-600  h-11 text-14-medium rounded-md px-3 outline-none !important;
+  }
+}
+
+/* =====  REACT-DATEPICKER OVERRIDES */
+.react-datepicker-wrapper.date-picker {
+  display: flex;
+  align-items: center;
+}
+
+.react-datepicker,
+.react-datepicker__time,
+.react-datepicker__header,
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker-time__header {
+  background-color: #1a1d21 !important;
+  border-color: #363a3d !important;
+  color: #abb8c4 !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker-time__header {
+  color: #ffffff !important;
+}
+
+.react-datepicker__triangle {
+  fill: #1a1d21 !important;
+  color: #1a1d21 !important;
+  stroke: #1a1d21 !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: #363a3d !important;
+}
+
+.react-datepicker__input-container input {
+  background-color: #1a1d21 !important;
+  width: 100%;
+  outline: none;
+}
+
+.react-datepicker__day--selected {
+  background-color: #24ae7c !important;
+  color: #ffffff !important;
+  border-radius: 4px;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: #24ae7c !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid #363a3d !important;
+}
+
+.react-datepicker__time-list-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* =====  REACT PHONE NUMBER INPUT OVERRIDES */
+.PhoneInputInput {
+  outline: none;
+  margin-left: 4px;
+  background: #1a1d21;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.PhoneInputInput::placeholder {
+  color: #1a1d21;
+}
+
+/* styles/globals.css */
+
+.card-container {
+  perspective: 1000px; /* Adds depth to the 3D effect */
+  width: 100%; /* Ensure the container takes up full width */
+}
+
+.card {
+  position: relative;
+  width: 70%;
+  height: 400px; /* Adjust height as needed */
+  transform-style: preserve-3d;
+  transition: transform 0.9s;
+}
+
+.card:hover {
+  transform: rotateY(180deg); /* Rotate the card on hover */
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden; /* Hides the back face when flipped */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-front,
+.card-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem; /* Optional: rounded corners */
+}
+
+.card-front {
+  background-color: #fff;
+  z-index: 2;
+  transform: rotateY(0deg); /* Front face position */
+}
+
+.card-back {
+  background-color: #f8f9fa;
+  transform: rotateY(180deg); /* Back face position */
+}
+
+@import "~slick-carousel/slick/slick.css";
+@import "~slick-carousel/slick/slick-theme.css";
+
+.review-slider-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.review-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.review-card img {
+  border: 3px solid #ddd;
+  background: #f4f4f4;
+}
+
+.slick-dots {
+  bottom: -30px;
+}
+
+.slick-dots li button:before {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.slick-dots .slick-active button:before {
+  color: #333;
+}
+
+/* glitter effect */
+.glitter-text {
+  position: relative;
+  display: inline-block;
+  color: #ffffff; /* Text color */
+  font-weight: bold;
+  font-size: inherit; /* Ensure font size is inherited */
+}
+
+.glitter-text::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background-size: 150% 150%;
+  opacity: 0.6;
+  z-index: 1;
+  clip: rect(0, auto, auto, 0);
+  animation: glitter 2s infinite linear;
+  mix-blend-mode: screen; /* Ensure the effect blends with the text color */
+}
+
+.glitter-text span {
+  position: relative;
+  z-index: 2;
+  text-shadow:
+    0 0 5px rgba(255, 255, 255, 0.9),
+    0 0 10px rgba(255, 255, 255, 0.7),
+    0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes glitter {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+/* glowing buttons */
+.btn {
+  margin: 0;
+  padding: 30 px;
+  border: 2px solid #1f2937; /* Same color as header */
+  background-color: #1f2937; /* Same color as header */
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  border-radius: 8px;
+}
+
+.btn::after {
+  content: "";
+  z-index: -1;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #1f2937; /* Same color as header */
+  left: 0;
+  top: 0;
+  border-radius: 8px;
+}
+
+/* glow effect */
+.btn::before {
+  content: "";
+  background: linear-gradient(45deg, #03e5b7 0%, #037ade 74%);
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  background-size: 600%;
+  z-index: -1;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  filter: blur(8px);
+  animation: glowing 20s linear infinite;
+  transition: opacity 0.3s ease-in-out;
+  border-radius: 8px;
+  opacity: 0;
+}
+
+@keyframes glowing {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 400% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* hover */
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn:active:after {
+  background: transparent;
+}
+
+.btn:active {
+  color: #1f2937;
+  font-weight: bold;
+}
+
+/* Define the enhanced animation for revealing images from back to front */
+@keyframes revealFromBack {
+  0% {
+    opacity: 0; /* Start invisible */
+    transform: translateX(50px) translateY(-30px) translateZ(-50px)
+      rotateX(20deg) rotateY(20deg) scaleX(0.7) scaleY(0.7); /* Start off-screen, slightly up, and rotated */
+    filter: blur(10px); /* Start blurred */
+  }
+  100% {
+    opacity: 1; /* End fully visible */
+    transform: translateX(0) translateY(0) translateZ(0) rotateX(0) rotateY(0)
+      scaleX(1) scaleY(1); /* End at normal position, not rotated */
+    filter: blur(0); /* End not blurred */
+  }
+}
+
+.icon-animation {
+  animation: revealFromBack 2s ease-out forwards; /* Adjust duration and easing for a more fluid effect */
+  opacity: 0; /* Ensure they are invisible before the animation starts */
+  transform: translateX(50px) translateY(-30px) translateZ(-50px) scaleX(0.7)
+    scaleY(0.7); /* Ensure they start off-screen and scaled down */
+  filter: blur(10px); /* Ensure they start blurred */
+}
+
+/* Delays for each icon to stagger the animation */
+.icon-1 {
+  animation-delay: 0s;
+}
+
+.icon-2 {
+  animation-delay: 0.5s;
+}
+
+.icon-3 {
+  animation-delay: 1s;
+}
+
+.icon-4 {
+  animation-delay: 1.5s;
+}
+
+.icon-5 {
+  animation-delay: 2s;
+}
+
+.icon-6 {
+  animation-delay: 2.5s;
+}
+
+/* Zoom animation for background image */
+@keyframes zoomBackground {
+  0% {
+    background-size: 100%;
+  }
+  100% {
+    background-size: 115%; /* Adjust the zoom level as needed */
+  }
+}
+
+/* Apply the animation to the specific hero section */
+.hero-zoom {
+  animation: zoomBackground 20s ease-in-out infinite;
+}
+
+/*fade in for icon 1 and 2*/
+@keyframes fadeInUp {
+  0% {
+    opacity: 0; /* Start invisible */
+    transform: translateY(30px); /* Start slightly below */
+  }
+  100% {
+    opacity: 1; /* End fully visible */
+    transform: translateY(0); /* End at normal position */
+  }
+}
+
+/* Fade-in from bottom to top animation for icons */
+.fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 1.5s ease forwards;
+}
+
+/* Custom delays for icon 1 and icon 2 */
+.icon-1 {
+  animation-delay: 0.5s; /* Delay for icon 1 */
+}
+
+.icon-2 {
+  animation-delay: 1s; /* Delay for icon 2 */
+}
+
+@keyframes scrollOpen {
+  0% {
+    opacity: 0; /* Start invisible */
+    transform: scaleX(0); /* Start fully compressed vertically */
+    transform-origin: left; /* Animate from the top downwards */
+  }
+  100% {
+    opacity: 1; /* Fully visible */
+    transform: scaleX(1); /* End at normal size */
+  }
+}
+/* Scroll opening fade-in effect for the button */
+.scroll-open {
+  opacity: 0; /* Initially hidden */
+  transform: scaleX(0); /* Compressed orizontally */
+  animation: scrollOpen 1.5s ease forwards; /* Scroll opening animation */
+  transform-origin: left; /* Open from the top */
+  animation-delay: 3s;
+}
+
+/* cards glass effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+  backdrop-filter: blur(10px); /* Blur effect */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition: box-shadow 0.3s ease;
+}
+
+.glass-effect:hover {
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow on hover */
+}
+
+/* Glassmorphism cards */
+.glassmorphism-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 12px linear-gradient(315deg, #03e5b7 0%, #037ade 74%); /* Increased border shadow */
+  position: relative; /* Ensure relative positioning for card content */
+  overflow: hidden; /* Hide overflow */
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out; /* Transition for card movement */
+}
+
+/* Card content styling */
+.glassmorphism-card .front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box; /* Ensure padding is included in width and height */
+}
+
+.glassmorphism-card .image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.glassmorphism-card .img-size {
+  width: 100px; /* Consistent image width */
+  height: 100px; /* Consistent image height */
+  margin-top: 1rem; /* Space above image */
+  margin-bottom: 1rem; /* Space below image */
+  object-fit: fill; /* Ensures image fits properly */
+}
+
+.glassmorphism-card .details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-grow: 1;
+  padding: 0 1rem; /* Add padding around text */
+}
+
+.glassmorphism-card .details h2 {
+  font-size: 1.25rem; /* Adjust as needed */
+  font-weight: bold;
+  margin-bottom: 0.5rem; /* Space below title */
+}
+
+.glassmorphism-card .details .description-text {
+  font-size: 1rem; /* Adjust as needed */
+  color: #fff; /* Ensure good contrast with background */
+  line-height: 1.5; /* Increase line height for readability */
+  text-align: center; /* Center-align text for better appearance */
+}
+
+.glassmorphism-card .back {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  transform: rotateY(180deg);
+}
+
+.chat-icon {
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease,
+    border 0.3s ease;
+  border: 6px solid; /* Subtle neon border */
+  border-color: url("http://www.zingerbugimages.com/backgrounds/white_marble_background_seamless.jpg");
+}
+
+.chat-icon:hover {
+  transform: scale(1.1); /* Slightly increase the size of the icon */
+  background-color: rgba(0, 255, 255, 0.2); /* Add a subtle background color */
+}
+
+/* teamcards flip */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.15); /* Semi-transparent white */
+  border-radius: 15px;
+  backdrop-filter: blur(10px); /* Apply the blur effect */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Soft border */
+}
+
+.perspective {
+  perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.card-face {
+  backface-visibility: hidden;
+}
+
+.group-hover\:rotate-y-180:hover {
+  transform: rotateY(180deg);
+}
+
+.card-container {
+  width: 300px;
+  height: 400px;
+}
+
+/* call us banner */
+
+/* Define the pulse animation */
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-effect {
+  animation: pulse 1.5s infinite;
+}
+
+/* call us banner */
+.call-us-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.call-us-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #3498db; /* Change to your desired background color */
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.8s ease-in-out;
+  z-index: -1;
+}
+
+.call-us-content {
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.8s ease-in-out;
+}
+
+.call-us-title {
+  font-size: 2rem;
+  font-weight: bold;
+  animation: pulse 1.5s infinite; /* Apply pulse animation */
+}
+
+.call-us-description {
+  font-size: 1.25rem;
+  margin-top: 1rem;
+}
+
+.call-us-button {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #2956eb; /* Button color */
+  color: white;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  font-weight: bold;
+}
+
+/* Animation */
+.animate-unfold .call-us-background {
+  transform: scaleX(1);
+}
+
+.animate-unfold .call-us-content {
+  transform: scaleX(1);
+}
