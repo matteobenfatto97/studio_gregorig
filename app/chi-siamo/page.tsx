@@ -25,11 +25,11 @@ const ChiSiamoPage: React.FC = () => {
 
         {/* Mission Statement Section */}
         <div className="mt-12 max-w-4xl mx-auto">
-          <div className="bg-white shadow-md rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800">
+          <div className="glassmorphism-card shadow-md rounded-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-200">
               La Nostra Missione
             </h2>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-white">
               Lo studio Dentistico Gregorig offre trattamenti odontoiatrici di
               ogni specialità, garantendo serietà , professionalità e massima
               accuratezza; il paziente ha la garanzia di essere seguito per
@@ -64,8 +64,8 @@ const ChiSiamoPage: React.FC = () => {
         <TeamMembersList />
 
         {/* Contact Information Section */}
-        <div className="mt-16 max-w-4xl mx-auto">
-          <div className="bg-white shadow-md rounded-lg p-8">
+        <div className="mt-16 max-w-4xl mx-auto ">
+          <div className="shadow-md rounded-lg p-8 glassmorphism-card">
             <Image
               src="/assets/icons/contattaci.png"
               height={150}
@@ -73,16 +73,16 @@ const ChiSiamoPage: React.FC = () => {
               alt="logo"
               className="w-fit h-fit"
             />
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-gray-200">
               Siamo qui per rispondere a tutte le tue domande e preoccupazioni.
               Non esitare a contattarci per maggiori informazioni.
             </p>
             <div className="mt-6">
-              <p className="text-gray-800">
-                <strong>Email:</strong> info@dentalstudio.com
+              <p className="text-white">
+                <strong>Email:</strong> gregoriggl@gmail.com
               </p>
-              <p className="text-gray-800 mt-2">
-                <strong>Telefono:</strong> +39 123 456 7890
+              <p className="text-white mt-2">
+                <strong>Telefono:</strong> +39 043566198
               </p>
             </div>
           </div>

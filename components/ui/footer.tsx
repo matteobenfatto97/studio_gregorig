@@ -19,6 +19,7 @@ const Footer: React.FC = () => {
     { href: "/chi-siamo", label: "Chi Siamo" },
     { href: "/servizi", label: "Servizi" },
     { href: "/contatti", label: "Contatti" },
+    { href: "/informativa-privacy", label: "Informativa Privacy" },
   ];
 
   return (

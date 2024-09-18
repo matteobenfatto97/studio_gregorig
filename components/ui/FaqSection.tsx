@@ -44,7 +44,7 @@ const FAQSection: React.FC = () => {
           key={index}
           className={`flex flex-col md:flex-row items-center mb-16 bg-white shadow-md rounded-xl overflow-hidden ${
             index % 2 === 0 ? "md:flex-row-reverse ml-auto" : "mr-auto"
-          }`}
+          } glassmorphism-card`}
           style={{ maxWidth: "75%" }} // Set max width to 75% for all blocks
         >
           {/* Image Section */}
@@ -58,10 +58,10 @@ const FAQSection: React.FC = () => {
 
           {/* Text Section */}
           <div className="md:w-1/2 w-full p-8 md:p-12">
-            <h3 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h3 className="text-3xl font-semibold mb-6 text-teal-600">
               {content.title}
             </h3>
-            <p className="text-base text-gray-700 leading-relaxed">
+            <p className="text-base text-white leading-relaxed">
               {content.text}
             </p>
           </div>
