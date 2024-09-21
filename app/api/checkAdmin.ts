@@ -11,9 +11,7 @@ export default async function handler(
     const admin = await checkAdminCredentials({ email, password, adminCode });
 
     if (admin) {
-      // Generate and send a token (e.g., JWT) if required
-      const token = "your-authentication-token"; // Generate or fetch your token
-      res.status(200).json({ success: true, token });
+      res.status(200).json({ success: true, redirectUrl: "/admin" });
     } else {
       res.status(401).json({ success: false });
     }

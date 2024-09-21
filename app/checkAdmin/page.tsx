@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkAdminCredentials } from "@/lib/actions/admin.actions";
-import Cookies from "js-cookie"; // Correctly imported
 import Image from "next/image";
-import { AdminForm } from "@/components/forms/AdminForm";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 
@@ -23,12 +20,18 @@ const CheckAdmin = () => {
     setError(null);
 
     try {
-      const admin = await checkAdminCredentials({ email, password, adminCode });
+      const response = await fetch("/api/checkAdmin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, adminCode }),
+      });
 
-      if (admin) {
-        // Store token in cookies
-        Cookies.set("adminToken", "your-admin-token", { expires: 1 }); // expires in 1 day
-        router.push("/admin");
+      const result = await response.json();
+
+      if (result.success) {
+        router.push(result.redirectUrl); // Redirect to /admin
       } else {
         setError("Invalid login credentials.");
       }

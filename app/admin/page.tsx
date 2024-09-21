@@ -1,21 +1,14 @@
 // app/admin/page.tsx (or where your admin page is located)
 import Image from "next/image";
-import Link from "next/link";
+
 import { StatCard } from "@/components/StatCard";
 import { columns } from "@/components/table/columns";
 import { DataTable } from "@/components/table/DataTable";
 import { getRecentAppointmentList } from "@/lib/actions/appointment.actions";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+
 import LogoutButton from "@/components/ui/logoutButton"; // Import the client component
 
 export default async function AdminPage() {
-  const adminToken = cookies().get("adminToken")?.value;
-
-  if (!adminToken) {
-    redirect("/checkAdmin");
-  }
-
   const appointments = await getRecentAppointmentList();
 
   return (
