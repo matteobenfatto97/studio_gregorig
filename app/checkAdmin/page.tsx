@@ -20,7 +20,7 @@ const CheckAdmin = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/checkAdmin", {
+      const response = await fetch("/checkAdmin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
