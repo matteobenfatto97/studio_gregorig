@@ -10,6 +10,12 @@ import { Appointment } from "@/types/appwrite.types";
 import { AppointmentModal } from "../AppointmentModal";
 import { StatusBadge } from "../StatusBadge";
 
+const statusLabels: Record<string, { display: string; value: Status }> = {
+  scheduled: { display: "Confermato", value: "scheduled" },
+  pending: { display: "In Attesa", value: "pending" },
+  cancelled: { display: "Annullato", value: "cancelled" },
+};
+
 export const columns: ColumnDef<Appointment>[] = [
   {
     id: "index",
@@ -37,9 +43,14 @@ export const columns: ColumnDef<Appointment>[] = [
     header: () => <div className="text-center">Status</div>,
     cell: ({ row }) => {
       const appointment = row.original;
+      const statusInfo = statusLabels[appointment.status] || {
+        display: appointment.status,
+        value: appointment.status,
+      }; // Fallback to original status if not found
+
       return (
         <div className="flex justify-center min-w-[115px]">
-          <StatusBadge status={appointment.status} />
+          <StatusBadge status={appointment.status} label={statusInfo.display} />
         </div>
       );
     },
@@ -93,16 +104,18 @@ export const columns: ColumnDef<Appointment>[] = [
             userId={appointment.userId}
             appointment={appointment}
             type="schedule"
-            title="Schedule Appointment"
-            description="Please confirm the following details to schedule."
+            label="conferma"
+            title="Conferma Appuntamento"
+            description="Per cortesia approva le seguenti modifiche per confermare la prenotazione."
           />
           <AppointmentModal
             patientId={appointment.patient.$id}
             userId={appointment.userId}
             appointment={appointment}
             type="cancel"
-            title="Cancel Appointment"
-            description="Are you sure you want to cancel your appointment?"
+            label="annulla"
+            title="Cancella appuntamento"
+            description="Sicuro di voler cancellare l'appuntamento?"
           />
         </div>
       );

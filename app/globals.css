@@ -741,12 +741,23 @@
 }
 
 .chat-icon {
+  position: relative;
   transition:
     transform 0.3s ease,
-    background-color 0.3s ease,
-    border 0.3s ease;
-  border: 6px solid; /* Subtle neon border */
-  border-color: url("http://www.zingerbugimages.com/backgrounds/white_marble_background_seamless.jpg");
+    background-color 0.3s ease;
+}
+
+.chat-icon::before {
+  content: "";
+  position: absolute;
+  top: -6px; /* Adjust to match the border size */
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  background: url("https://www.zingerbugimages.com/backgrounds/white_marble_background_seamless.jpg");
+  background-size: cover;
+  border-radius: 50%;
+  z-index: -1; /* Ensure it's behind the button */
 }
 
 .chat-icon:hover {
@@ -863,4 +874,30 @@
 
 .animate-unfold .call-us-content {
   transform: scaleX(1);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    315deg,
+    #03e5b7 0%,
+    #037ade 74%
+  ); /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded edges */
+}
+
+::-webkit-scrollbar-track {
+  background: #000000; /* Color of the scrollbar track */
+  border-radius: 10px; /* Rounded edges for the track */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    315deg,
+    #037ade 0% #03e5b7 74%
+  ); /* Color of the scrollbar thumb */
 }

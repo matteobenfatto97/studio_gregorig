@@ -222,20 +222,23 @@ const LiveChat: React.FC = () => {
         </div>
       ) : (
         <div
-          className="bg-blueGreenGradient p-4 rounded-full cursor-pointer shadow-lg chat-icon"
-          onClick={handleToggleChat}
-        >
-          {chatOpen ? (
-            <IoMdChatbubbles className="text-white text-3xl" />
-          ) : (
-            <Image
-              src="/assets/icons/denty.png"
-              alt=""
-              width={50}
-              height={50}
-            />
-          )}
-        </div>
+  className={`bg-blueGreenGradient p-4 rounded-full cursor-pointer shadow-lg chat-icon ${
+    chatOpen ? "" : "border-4 border-white"
+  }`}
+  onClick={handleToggleChat}
+>
+  {chatOpen ? (
+    <IoMdChatbubbles className="text-white text-3xl" />
+  ) : (
+    <Image
+      src="/assets/icons/denty.png"
+      alt="denty"
+      width={50}
+      height={50}
+    />
+  )}
+</div>
+
       )}
     </div>
   );

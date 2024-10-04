@@ -120,18 +120,21 @@ export const AppointmentForm = ({
   let buttonLabel;
   switch (type) {
     case "cancel":
-      buttonLabel = "Cancel Appointment";
+      buttonLabel = "Cancella Appuntamento";
       break;
     case "schedule":
-      buttonLabel = "Schedule Appointment";
+      buttonLabel = "Prenota";
       break;
     default:
-      buttonLabel = "Submit Apppointment";
+      buttonLabel = "Invia!";
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex-1 space-y-6 text-white"
+      >
         {type === "create" && (
           <section className="mb-12 space-y-4">
             <h1 className="header">New Appointment</h1>
@@ -147,12 +150,12 @@ export const AppointmentForm = ({
               fieldType={FormFieldType.SELECT}
               control={form.control}
               name="primaryPhysician"
-              label="Doctor"
-              placeholder="Select a doctor"
+              label="Medico"
+              placeholder="Seleziona un medico"
             >
               {Doctors.map((doctor, i) => (
                 <SelectItem key={doctor.name + i} value={doctor.name}>
-                  <div className="flex cursor-pointer items-center gap-2">
+                  <div className="flex cursor-pointer items-center gap-2 text-white">
                     <Image
                       src={doctor.image}
                       width={32}
@@ -170,7 +173,7 @@ export const AppointmentForm = ({
               fieldType={FormFieldType.DATE_PICKER}
               control={form.control}
               name="schedule"
-              label="Expected appointment date"
+              label="Data prevista"
               showTimeSelect
               dateFormat="dd/mm/yyyy  -  h:mm aa"
             />
@@ -182,8 +185,8 @@ export const AppointmentForm = ({
                 fieldType={FormFieldType.TEXTAREA}
                 control={form.control}
                 name="reason"
-                label="Appointment reason"
-                placeholder="Annual montly check-up"
+                label="motivazione"
+                placeholder="pulizia semestrale"
                 disabled={type === "schedule"}
               />
 
@@ -191,8 +194,8 @@ export const AppointmentForm = ({
                 fieldType={FormFieldType.TEXTAREA}
                 control={form.control}
                 name="note"
-                label="Comments/notes"
-                placeholder="Prefer afternoon appointments, if possible"
+                label="note"
+                placeholder="se possibile preferirei appuntamenti nel pomeriggio"
                 disabled={type === "schedule"}
               />
             </div>
@@ -204,8 +207,8 @@ export const AppointmentForm = ({
             fieldType={FormFieldType.TEXTAREA}
             control={form.control}
             name="cancellationReason"
-            label="Reason for cancellation"
-            placeholder="Urgent meeting came up"
+            label="Motivazioni per la cancellazione"
+            placeholder="chiusura improvvisa / conferenza medica urgente"
           />
         )}
 

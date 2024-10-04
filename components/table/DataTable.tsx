@@ -8,7 +8,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,9 +38,14 @@ export function DataTable<TData, TValue>({
   useEffect(() => {
     const accessKey = encryptedKey && decryptKey(encryptedKey);
 
-    if (accessKey !== process.env.NEXT_PUBLIC_ADMIN_PASSKEY?.toString()) {
-      redirect("/"); // Redirect to home if access key is invalid
-    }
+    // Optional: Log the accessKey for debugging
+    console.log("Access Key:", accessKey);
+
+    // You can handle invalid access key differently, e.g., set a state to show an error message
+    // if (accessKey !== process.env.NEXT_PUBLIC_ADMIN_PASSKEY?.toString()) {
+    //   // Instead of redirecting, you might want to handle this gracefully
+    //   // e.g., set an error state or show a message
+    // }
   }, [encryptedKey]);
 
   const table = useReactTable({

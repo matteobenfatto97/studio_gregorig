@@ -2,8 +2,8 @@
 import { ID, Query } from "node-appwrite";
 
 import {
-  DATABASE_ID,
-  ADMIN_COLLECTION_ID,
+  NEXT_PUBLIC_DATABASE_ID,
+  NEXT_PUBLIC_ADMIN_COLLECTION_ID,
   databases,
 } from "../appwrite.config";
 import { parseStringify } from "../utils";
@@ -25,8 +25,8 @@ export const checkAdminCredentials = async ({
   try {
     // Query the admin collection to find a matching document
     const response = await databases.listDocuments(
-      DATABASE_ID!,
-      ADMIN_COLLECTION_ID!,
+      NEXT_PUBLIC_DATABASE_ID!,
+      NEXT_PUBLIC_ADMIN_COLLECTION_ID!,
       [
         Query.equal("email", [email]),
         Query.equal("password", [password]),

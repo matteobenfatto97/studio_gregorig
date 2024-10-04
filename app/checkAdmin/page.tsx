@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
+import { Client, Databases, Query } from "appwrite";
 
 const CheckAdmin = () => {
   const [email, setEmail] = useState("");
@@ -14,29 +15,45 @@ const CheckAdmin = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const client = new Client();
+  const databases = new Databases(client);
+
+  client
+    .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT as string) // Your Appwrite Endpoint
+    .setProject(process.env.NEXT_PUBLIC_PROJECT_ID as string); // Your Project ID
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/checkAdmin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, adminCode }),
-      });
+      const databaseId = process.env.NEXT_PUBLIC_DATABASE_ID as string;
+      const adminCollectionId = process.env
+        .NEXT_PUBLIC_ADMIN_COLLECTION_ID as string;
 
-      const result = await response.json();
+      const response = await databases.listDocuments(
+        databaseId,
+        adminCollectionId,
+        [
+          Query.equal("email", email),
+          Query.equal("password", password),
+          Query.equal("adminCode", adminCode),
+        ]
+      );
 
-      if (result.success) {
-        router.push(result.redirectUrl); // Redirect to /admin
+      console.log("Response from Appwrite:", response); // Debugging line
+
+      if (response.total > 0) {
+        // Admin credentials are valid
+        window.localStorage.setItem("isAdminLoggedIn", "true"); // Set flag
+        router.push("/admin");
       } else {
+        // No matching admin found
         setError("Invalid login credentials.");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login error:", err); // Detailed error logging
       setError("Login failed. Please check your credentials and try again.");
     } finally {
       setLoading(false);

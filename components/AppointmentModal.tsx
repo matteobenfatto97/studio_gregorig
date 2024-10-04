@@ -22,11 +22,13 @@ export const AppointmentModal = ({
   userId,
   appointment,
   type,
+  label, // Add label prop
 }: {
   patientId: string;
   userId: string;
   appointment?: Appointment;
   type: "schedule" | "cancel";
+  label: "conferma" | "annulla"; // Use the new label prop
   title: string;
   description: string;
 }) => {
@@ -37,23 +39,23 @@ export const AppointmentModal = ({
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className={`capitalize ${type === "schedule" && "text-green-500"}`}
+          className={`capitalize ${type === "schedule" ? "text-green-500" : "text-red-500"}`} // Adjust color based on type
         >
-          {type}
+          {label} {/* Use the label prop for button text */}
         </Button>
       </DialogTrigger>
-      <DialogContent className="shad-dialog sm:max-w-md">
+      <DialogContent className="shad-dialog sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="mb-4 space-y-3">
-          <DialogTitle className="capitalize">{type} Appointment</DialogTitle>
+          <DialogTitle className="capitalize">{label} Appuntamento</DialogTitle>{" "}
           <DialogDescription>
-            Please fill in the following details to {type} appointment
+            Per favore inserisci i dati necessari per {label}re l'appuntamento.
           </DialogDescription>
         </DialogHeader>
 
         <AppointmentForm
           userId={userId}
           patientId={patientId}
-          type={type}
+          type={type} // Pass the type as is
           appointment={appointment}
           setOpen={setOpen}
         />

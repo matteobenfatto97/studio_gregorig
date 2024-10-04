@@ -1,9 +1,14 @@
 import clsx from "clsx";
 import Image from "next/image";
-
 import { StatusIcon } from "@/constants";
+import React from "react";
 
-export const StatusBadge = ({ status }: { status: Status }) => {
+interface StatusBadgeProps {
+  status: Status; // Keep the status type
+  label: string; // New label prop
+}
+
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
   return (
     <div
       className={clsx("status-badge", {
@@ -14,7 +19,7 @@ export const StatusBadge = ({ status }: { status: Status }) => {
     >
       <Image
         src={StatusIcon[status]}
-        alt="doctor"
+        alt="status icon" // Updated alt text for better accessibility
         width={24}
         height={24}
         className="h-fit w-3 mx-auto"
@@ -26,7 +31,7 @@ export const StatusBadge = ({ status }: { status: Status }) => {
           "text-red-500": status === "cancelled",
         })}
       >
-        {status}
+        {label} {/* Use the label prop instead of status */}
       </p>
     </div>
   );

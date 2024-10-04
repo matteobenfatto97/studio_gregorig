@@ -7,7 +7,7 @@ import { Appointment } from "@/types/appwrite.types";
 
 import {
   APPOINTMENT_COLLECTION_ID,
-  DATABASE_ID,
+  NEXT_PUBLIC_DATABASE_ID,
   databases,
   messaging,
 } from "../appwrite.config";
@@ -19,7 +19,7 @@ export const createAppointment = async (
 ) => {
   try {
     const newAppointment = await databases.createDocument(
-      DATABASE_ID!,
+      NEXT_PUBLIC_DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       ID.unique(),
       appointment
@@ -36,7 +36,7 @@ export const createAppointment = async (
 export const getRecentAppointmentList = async () => {
   try {
     const appointments = await databases.listDocuments(
-      DATABASE_ID!,
+      NEXT_PUBLIC_DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       [Query.orderDesc("$createdAt")]
     );
@@ -59,6 +59,9 @@ export const getRecentAppointmentList = async () => {
           case "cancelled":
             acc.cancelledCount++;
             break;
+          default:
+            // Optionally handle unexpected statuses
+            break;
         }
         return acc;
       },
@@ -77,6 +80,14 @@ export const getRecentAppointmentList = async () => {
       "An error occurred while retrieving the recent appointments:",
       error
     );
+    // Return a consistent structure even on error
+    return {
+      totalCount: 0,
+      scheduledCount: 0,
+      pendingCount: 0,
+      cancelledCount: 0,
+      documents: [],
+    };
   }
 };
 
@@ -107,7 +118,7 @@ export const updateAppointment = async ({
   try {
     // Update appointment
     const updatedAppointment = await databases.updateDocument(
-      DATABASE_ID!,
+      NEXT_PUBLIC_DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       appointmentId,
       appointment
@@ -139,7 +150,7 @@ export const updateAppointment = async ({
 export const getAppointment = async (appointmentId: string) => {
   try {
     const appointment = await databases.getDocument(
-      DATABASE_ID!,
+      NEXT_PUBLIC_DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       appointmentId
     );
