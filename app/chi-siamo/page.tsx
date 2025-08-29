@@ -1,12 +1,29 @@
-// app/(site)/chi-siamo/page.tsx
+"use-client";
+
+// app/(site)/chi-siamo/page.tsx (optimized, no TS errors)
 import type { Metadata } from "next";
 import Script from "next/script";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
-import LiveChat from "@/components/Chatbot";
-import TeamMembersList from "@/components/lists/TeamMembersList";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
+
+// ✅ Carosello caricato in modo dinamico e solo lato client (niente SSR/hydration pesante)
+const TeamMembersList = dynamic(
+  () => import("@/components/lists/TeamMembersList"),
+  {
+    ssr: false,
+    // scheletro ultra leggero
+    loading: () => <TeamMembersSkeleton />,
+  }
+);
+
+// ✅ Chatbot caricato solo lato client (evita costi in SSR)
+const LiveChat = dynamic(() => import("@/components/Chatbot"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export const metadata: Metadata = {
   title: "Chi Siamo • Studio dentistico Dr. Gregorig",
@@ -41,7 +58,7 @@ export default function ChiSiamoPage() {
       addressCountry: "IT",
     },
     logo: "/assets/icons/aa.png",
-  };
+  } as const;
 
   return (
     <>
@@ -59,13 +76,11 @@ export default function ChiSiamoPage() {
             </p>
           </div>
         </section>
-        {/* BIG IMAGE UNDER TITLE */}
+
+        {/* BIG IMAGE UNDER TITLE (LCP) */}
         <section aria-label="Immagine dello studio" className="mb-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div
-              className="relative w-full overflow-hidden rounded-3xl shadow-xl
-                aspect-[16/9] sm:aspect-[16/9] lg:aspect-[21/9]"
-            >
+            <div className="relative w-full overflow-hidden rounded-3xl shadow-xl aspect-[16/9] sm:aspect-[16/9] lg:aspect-[21/9]">
               <Image
                 src="/assets/team/Gruppo.png"
                 alt="Lo Studio Gregorig: ambienti moderni e accoglienti"
@@ -78,6 +93,7 @@ export default function ChiSiamoPage() {
             </div>
           </div>
         </section>
+
         {/* MISSION */}
         <section aria-label="La nostra missione" className="py-12">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -109,6 +125,7 @@ export default function ChiSiamoPage() {
             </div>
           </div>
         </section>
+
         {/* VALUES + STATS */}
         <section aria-label="Valori e indicatori" className="py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -116,31 +133,22 @@ export default function ChiSiamoPage() {
               I nostri valori
             </h2>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-black/10 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-base font-semibold">Prevenzione</h3>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                  Richiami periodici e igiene per mantenere i denti naturali nel
-                  tempo.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-black/10 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-base font-semibold">Tecnologia</h3>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                  Strumentazione aggiornata per diagnosi e trattamenti accurati.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-black/10 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-base font-semibold">Trasparenza</h3>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                  Piani di cura chiari, tempi definiti, comunicazione semplice.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-black/10 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-base font-semibold">Accoglienza</h3>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                  Ambienti confortevoli e un team empatico e presente.
-                </p>
-              </div>
+              <CardValue
+                title="Prevenzione"
+                text="Richiami periodici e igiene per mantenere i denti naturali nel tempo."
+              />
+              <CardValue
+                title="Tecnologia"
+                text="Strumentazione aggiornata per diagnosi e trattamenti accurati."
+              />
+              <CardValue
+                title="Trasparenza"
+                text="Piani di cura chiari, tempi definiti, comunicazione semplice."
+              />
+              <CardValue
+                title="Accoglienza"
+                text="Ambienti confortevoli e un team empatico e presente."
+              />
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -151,7 +159,18 @@ export default function ChiSiamoPage() {
             </div>
           </div>
         </section>
-        <section aria-label="Il nostro team" className="py-16">
+
+        {/* TEAM (defer + ultra fast) */}
+        <section
+          aria-label="Il nostro team"
+          className="py-16"
+          // Evita lavoro di layout/paint finché offscreen, mantiene dimensioni intrinseche per evitare CLS
+          style={{
+            contentVisibility: "auto",
+            containIntrinsicSize: "660px 1000px",
+            contain: "layout paint style" as any,
+          }}
+        >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-center text-2xl font-semibold sm:text-3xl">
               Il nostro Team
@@ -160,12 +179,13 @@ export default function ChiSiamoPage() {
               Professionisti esperti, formazione continua e un unico obiettivo:
               il tuo sorriso.
             </p>
-            <div className=" py-16 mt-6">
-              {/* leggermente meno spazio sopra */}
-              <TeamMembersList compact />
+            <div className="py-16 mt-6">
+              {/* Carosello: versione 2D super-performante, finestra ristretta */}
+              <TeamMembersList windowSize={5} />
             </div>
           </div>
         </section>
+
         {/* CONTACT CTA */}
         <section aria-label="Contatti" className="pb-20">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -224,16 +244,55 @@ export default function ChiSiamoPage() {
             </div>
           </div>
         </section>
-        {/* Chatbot floating */}
-        <div className="fixed bottom-6 right-6 z-40">
+
+        {/* Chatbot floating: caricato lato client, non blocca la pagina */}
+        <div
+          className="fixed bottom-6 right-6 z-40"
+          style={{
+            contentVisibility: "auto",
+            contain: "layout paint style" as any,
+          }}
+        >
           <LiveChat />
         </div>
       </main>
       <Footer />
       {/* JSON-LD structured data */}
-      <Script id="org-jsonld" type="application/ld+json">
+      <Script
+        id="org-jsonld"
+        type="application/ld+json"
+        strategy="afterInteractive"
+      >
         {JSON.stringify(jsonLd)}
       </Script>
     </>
+  );
+}
+
+function CardValue({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-black/10 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+      <h3 className="text-base font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function TeamMembersSkeleton() {
+  return (
+    <div className="mx-auto max-w-7xl">
+      <div className="relative mx-auto flex h-[560px] sm:h-[620px] md:h-[660px] items-center justify-center overflow-hidden">
+        <div className="flex gap-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-[360px] w-[260px] rounded-2xl border border-white/10 bg-gradient-to-br from-slate-200/60 to-slate-100/30 shadow-sm dark:from-slate-700/30 dark:to-slate-800/30 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

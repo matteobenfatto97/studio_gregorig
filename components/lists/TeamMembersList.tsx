@@ -6,8 +6,14 @@ import React, {
   useMemo,
   useRef,
   useState,
+  memo,
 } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { teamMembers } from "@/lib/actions/teamMembers";
 import TeamMembersCard from "../TeamMemberCard";
@@ -25,25 +31,44 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 const normAngle = (deg: number) => ((deg + 540) % 360) - 180; // -> [-180,180)
 
+// ---- PERF HINTS ----
+// 1) No autoplay. Purely user-driven (arrows, wheel, drag, thumbs).
+// 2) Virtualize: render only a small window of neighbors around the active slide (default 7).
+// 3) Avoid per-item Framer Motion; only the center card uses motion values for tilt (no React re-render on pointer move).
+// 4) Lighter effects: reduced heavy blurs; CSS keyframes instead of motion where possible.
+// 5) content-visibility/contain to isolate painting and reduce layout thrash.
+
 export default function TeamMembersList({
   compact = false,
+  windowSize = 7,
 }: {
   compact?: boolean;
+  windowSize?: number;
 }) {
   const members = teamMembers as Member[];
 
   const [active, setActive] = useState(0);
   const [itemWidth, setItemWidth] = useState(320);
-  const [paused, setPaused] = useState(false);
-  const [tilt, setTilt] = useState<{ rx: number; ry: number }>({
-    rx: 0,
-    ry: 0,
-  });
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion();
 
-  const resetTilt = () => setTilt({ rx: 0, ry: 0 });
+  // Geometry
+  const baseDeg = Math.max(36, 360 / Math.max(6, members.length));
+  const radius = Math.min(itemWidth * 1.42, 460);
+
+  // Tilt (center card only) via motion values (no React state updates on move)
+  const mvTiltX = useMotionValue(0); // rotateX
+  const mvTiltY = useMotionValue(0); // rotateY micro-tilt
+  const tiltX = useSpring(mvTiltX, { stiffness: 140, damping: 18, mass: 0.6 });
+  const tiltY = useSpring(mvTiltY, { stiffness: 140, damping: 18, mass: 0.6 });
+
+  const resetTilt = () => {
+    mvTiltX.stop();
+    mvTiltY.stop();
+    mvTiltX.set(0);
+    mvTiltY.set(0);
+  };
 
   // Resize -> recompute card width
   useEffect(() => {
@@ -59,20 +84,6 @@ export default function TeamMembersList({
     ro.observe(el);
     return () => ro.disconnect();
   }, [compact]);
-
-  // Pause autoplay when off-screen
-  useEffect(() => {
-    const el = viewportRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        setPaused(!entry.isIntersecting);
-      },
-      { threshold: 0.15 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   const go = useCallback(
     (dir: "prev" | "next") => {
@@ -91,19 +102,11 @@ export default function TeamMembersList({
     (e: React.KeyboardEvent) => {
       if (e.key === "ArrowLeft") go("prev");
       if (e.key === "ArrowRight") go("next");
-      if (e.key === " ") setPaused((p) => !p);
       if (e.key === "Home") setActive(0);
       if (e.key === "End") setActive(members.length - 1);
     },
     [go, members.length]
   );
-
-  // Autoplay
-  useEffect(() => {
-    if (paused || reduceMotion) return;
-    const id = setInterval(() => go("next"), 4500);
-    return () => clearInterval(id);
-  }, [paused, reduceMotion, go]);
 
   // Wheel throttle
   const lastWheelRef = useRef(0);
@@ -115,12 +118,11 @@ export default function TeamMembersList({
     delta > 0 ? go("next") : go("prev");
   };
 
-  // Drag inertia
+  // Drag inertia (unchanged, but without autoplay interactions)
   const press = useRef<{ x: number; at: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     press.current = { x: e.clientX, at: performance.now() };
-    setPaused(true);
   };
   const onPointerUp = (e: React.PointerEvent) => {
     if (!press.current) return;
@@ -128,7 +130,6 @@ export default function TeamMembersList({
     const dt = Math.max(1, performance.now() - press.current.at);
     const v = dx / dt; // px/ms
     press.current = null;
-    setPaused(false);
     const step = Math.round(dx / 160 + v * 6);
     if (step === 0) return;
     setActive(
@@ -139,16 +140,26 @@ export default function TeamMembersList({
 
   const items = useMemo(() => members.map((m, i) => ({ ...m, i })), [members]);
 
-  // Cylinder params
-  const baseDeg = Math.max(36, 360 / Math.max(6, members.length));
-  const radius = Math.min(itemWidth * 1.42, 460);
-  const VISIBLE = 0.02;
+  // Virtualize indices around `active` within windowSize (must be odd)
+  const half = Math.max(1, Math.floor(windowSize / 2));
+  const virtualIndices = useMemo(() => {
+    const arr: number[] = [];
+    for (let off = -half; off <= half; off++) {
+      arr.push(
+        (((active + off) % members.length) + members.length) % members.length
+      );
+    }
+    return arr;
+  }, [active, members.length, half]);
 
+  // Pointer tilt for center card only (no state updates)
   const onPointerMoveCenter = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (reduceMotion) return;
     const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width; // 0..1
     const y = (e.clientY - r.top) / r.height; // 0..1
-    setTilt({ ry: lerp(-8, 8, x), rx: lerp(6, -6, y) });
+    mvTiltY.set(lerp(-8, 8, x));
+    mvTiltX.set(lerp(6, -6, y));
   };
 
   return (
@@ -160,178 +171,220 @@ export default function TeamMembersList({
     >
       <div
         ref={viewportRef}
-        className={`relative mx-auto flex items-center justify-center overflow-visible ${compact ? "h-[420px] sm:h-[460px] md:h-[500px]" : "h-[560px] sm:h-[620px] md:h-[660px]"}`}
+        className={`${compact ? "h-[420px] sm:h-[460px] md:h-[500px]" : "h-[560px] sm:h-[620px] md:h-[660px]"} relative mx-auto flex items-center justify-center overflow-visible`}
         style={{ perspective: "1700px", transformStyle: "preserve-3d" as any }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
-        {/* BACKDROP */}
+        {/* BACKDROP (lighter) */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0"
           style={{
             transformStyle: "preserve-3d",
-            transform: `translateZ(${-radius * 0.95}px)`,
+            transform: `translateZ(${-radius * 0.9}px)`,
           }}
         >
           <div
-            className="absolute left-1/2 top-1/2 h-[78%] w-[min(86vw,940px)] -translate-x-1/2 -translate-y-1/2 rounded-[80px]"
+            className="absolute left-1/2 top-1/2 h-[78%] w-[min(86vw,940px)] -translate-x-1/2 -translate-y-1/2 rounded-[64px]"
             style={{
               background:
-                "linear-gradient(90deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.09))",
+                "linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.07))",
               maskImage:
                 "radial-gradient(120% 100% at 50% 50%, black 35%, transparent 70%)",
               WebkitMaskImage:
                 "radial-gradient(120% 100% at 50% 50%, black 35%, transparent 70%)",
-              boxShadow: "inset 0 0 40px rgba(255,255,255,0.06)",
+              boxShadow: "inset 0 0 36px rgba(255,255,255,0.05)",
             }}
           />
-          <motion.div
-            className={`absolute left-1/2 top-1/2 ${compact ? "h-64 w-64" : "h-80 w-80"} -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl`}
+          <div
+            className={`${compact ? "h-64 w-64" : "h-80 w-80"} absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-floatPulse`}
             style={{
               background:
-                "radial-gradient(closest-side, rgba(56,189,248,0.35), transparent)",
+                "radial-gradient(closest-side, rgba(56,189,248,0.28), transparent)",
             }}
-            animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.45, 0.7, 0.45] }}
-            transition={{ duration: 3.6, repeat: Infinity }}
           />
         </div>
 
-        {/* CARDS */}
-        {items.map((m, idx) => {
+        {/* CARDS (virtualized) */}
+        {virtualIndices.map((idx) => {
+          const m = items[idx];
           const angDeg = (idx - active) * baseDeg;
           const angNorm = normAngle(angDeg);
           const depth = (Math.cos(toRad(angNorm)) + 1) / 2; // 0..1
-          const visible = depth > VISIBLE;
-          const isCenter = Math.abs(angNorm) <= baseDeg * 0.5;
+          const isCenter = idx === active;
 
           const scale = isCenter ? (compact ? 1.1 : 1.18) : 0.9 + depth * 0.18;
           const zi = Math.round(10 + depth * 90);
-          const opacity = visible ? (isCenter ? 1 : 0.92) : 0;
+          const opacity = isCenter ? 1 : 0.92;
           const zBoost = Math.max(0, 34 - Math.abs(angNorm) * 1.0);
           const extraX = Math.sign(angNorm) * Math.pow(1 - depth, 1.12) * 64;
 
-          return (
-            <motion.div
-              key={idx}
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                width: itemWidth,
-                transformStyle: "preserve-3d",
-                zIndex: zi,
-                visibility: visible ? "visible" : "hidden",
-                pointerEvents: isCenter ? "auto" : "none",
-                willChange: "transform",
-              }}
-              animate={{
-                rotateY: angNorm,
-                rotateX: isCenter ? tilt.rx : 0,
-                scale,
-                opacity,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 110,
-                damping: 18,
-                mass: 0.7,
-              }}
-              transformTemplate={({ rotateX, rotateY, scale }) =>
-                `translate(-50%, -50%) translateX(${extraX}px) rotateY(${rotateY}) translateZ(${radius + zBoost}px) rotateX(${rotateX}) scale(${scale})`
-              }
-            >
-              {/* Ombra */}
-              {visible && (
-                <div
-                  aria-hidden
-                  className="absolute left-1/2 top-[calc(100%+10px)] -z-10 h-10 w-44 -translate-x-1/2 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(closest-side, rgba(0,0,0,0.45), transparent)",
-                    filter: "blur(16px)",
-                    opacity: isCenter ? 0.85 : 0.45,
-                    transform: `scale(${isCenter ? 1.25 : 0.95})`,
-                  }}
-                />
-              )}
+          const baseTransform = `translate(-50%, -50%) translateX(${extraX}px) rotateY(${angNorm}deg) translateZ(${radius + zBoost}px) scale(${scale})`;
 
-              {/* Card */}
+          const commonStyle: React.CSSProperties = {
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: itemWidth,
+            transformStyle: "preserve-3d",
+            zIndex: zi,
+            visibility: "visible",
+            pointerEvents: isCenter ? "auto" : "none",
+            willChange: "transform, opacity",
+            transform: baseTransform,
+            transition: reduceMotion
+              ? undefined
+              : "transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease-out",
+            contain: "layout paint style",
+            // Help the GPU
+            backfaceVisibility: "hidden",
+          };
+
+          if (isCenter) {
+            return (
+              <div key={idx} style={commonStyle}>
+                {/* Inner wrapper applies tilt without reflows */}
+                <motion.div style={{ rotateX: tiltX, rotateY: tiltY }}>
+                  {/* Ombra */}
+                  <div
+                    aria-hidden
+                    className="absolute left-1/2 top-[calc(100%+10px)] -z-10 h-10 w-44 -translate-x-1/2 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(closest-side, rgba(0,0,0,0.4), transparent)",
+                      filter: "blur(14px)",
+                      opacity: 0.85,
+                      transform: "scale(1.2)",
+                    }}
+                  />
+
+                  <button
+                    aria-label={`${m.name}, card attiva`}
+                    onPointerMove={onPointerMoveCenter}
+                    onPointerLeave={resetTilt}
+                    onClick={() => setActive(idx)}
+                    className={`group relative block rounded-2xl border border-white/10 bg-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 ring-1 ring-white/10 shadow-[0_28px_120px_-24px_rgba(56,189,248,0.45)]`}
+                  >
+                    <div
+                      className="w-[--w]"
+                      style={{ ["--w" as any]: `${itemWidth - 8}px` }}
+                    >
+                      <MemoTeamMembersCard
+                        imageUrl={m.imageUrl}
+                        name={m.name}
+                        role={m.role}
+                        description={m.description ?? ""}
+                        interactive
+                        muted={false}
+                      />
+                    </div>
+                  </button>
+                </motion.div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={idx} style={commonStyle}>
+              {/* Ombra */}
+              <div
+                aria-hidden
+                className="absolute left-1/2 top-[calc(100%+10px)] -z-10 h-10 w-44 -translate-x-1/2 rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(closest-side, rgba(0,0,0,0.35), transparent)",
+                  filter: "blur(14px)",
+                  opacity: 0.45,
+                  transform: "scale(0.95)",
+                }}
+              />
               <button
-                aria-label={
-                  isCenter ? `${m.name}, card attiva` : `Vai a ${m.name}`
-                }
+                aria-label={`Vai a ${m.name}`}
                 onClick={() => setActive(idx)}
-                onPointerMove={isCenter ? onPointerMoveCenter : undefined}
-                onPointerLeave={isCenter ? resetTilt : undefined}
-                className={`${isCenter ? "group" : ""} relative block rounded-2xl border border-white/10 bg-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 ${isCenter ? "ring-1 ring-white/10 shadow-[0_36px_180px_-24px_rgba(56,189,248,0.55)]" : "opacity-95"}`}
+                className={`relative block rounded-2xl border border-white/10 bg-transparent p-1 opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60`}
               >
                 <div
                   className="w-[--w]"
                   style={{ ["--w" as any]: `${itemWidth - 8}px` }}
                 >
-                  <TeamMembersCard
+                  <MemoTeamMembersCard
                     imageUrl={m.imageUrl}
                     name={m.name}
                     role={m.role}
                     description={m.description ?? ""}
-                    interactive={isCenter}
-                    muted={!isCenter}
+                    interactive={false}
+                    muted
                   />
                 </div>
               </button>
-            </motion.div>
+            </div>
           );
         })}
 
         {/* FRECCE */}
         <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-50 flex items-center justify-between px-2">
-          <motion.button
+          <button
             aria-label="Precedente"
             className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
-            whileHover={{ x: -2 }}
             onClick={() => go("prev")}
           >
             <ChevronLeft className="h-7 w-7" strokeWidth={3} />
-          </motion.button>
-          <motion.button
+          </button>
+          <button
             aria-label="Successivo"
             className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
-            whileHover={{ x: 2 }}
             onClick={() => go("next")}
           >
             <ChevronRight className="h-7 w-7" strokeWidth={3} />
-          </motion.button>
+          </button>
         </div>
       </div>
 
-      {/* THUMB RAIL */}
-      <ThumbRail
+      {/* THUMB RAIL (no progress bar, memoized) */}
+      <MemoThumbRail
         members={members}
         active={active}
         onSelect={(i) => {
           setActive(i);
           resetTilt();
         }}
-        paused={paused || !!reduceMotion}
       />
+
+      <style jsx>{`
+        @keyframes floatPulse {
+          0% {
+            transform: scale(0.96);
+            opacity: 0.45;
+          }
+          50% {
+            transform: scale(1.04);
+            opacity: 0.7;
+          }
+          100% {
+            transform: scale(0.96);
+            opacity: 0.45;
+          }
+        }
+        .animate-floatPulse {
+          animation: floatPulse 3.6s infinite ease-in-out;
+        }
+      `}</style>
     </section>
   );
 }
+
+const MemoTeamMembersCard = memo(TeamMembersCard as React.FC<any>);
 
 function ThumbRail({
   members,
   active,
   onSelect,
-  paused,
 }: {
   members: Member[];
   active: number;
   onSelect: (i: number) => void;
-  paused: boolean;
 }) {
   return (
     <div className="mt-6 flex w-full items-center justify-center">
@@ -354,30 +407,12 @@ function ThumbRail({
               <span
                 className={`absolute inset-0 ${is ? "bg-black/0" : "bg-black/5"}`}
               />
-              {is && (
-                <span
-                  key={`${i}-${paused ? "paused" : "play"}`}
-                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-gradient-to-r from-cyan-300 to-fuchsia-400"
-                  style={{
-                    animation: paused ? "none" : "rail 4.5s linear forwards",
-                  }}
-                />
-              )}
             </button>
           );
         })}
       </div>
-
-      <style jsx>{`
-        @keyframes rail {
-          from {
-            transform: scaleX(0);
-          }
-          to {
-            transform: scaleX(1);
-          }
-        }
-      `}</style>
     </div>
   );
 }
+
+const MemoThumbRail = memo(ThumbRail);
