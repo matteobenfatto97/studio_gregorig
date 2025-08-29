@@ -27,11 +27,7 @@ export default function Page() {
   );
 }
 
-export function LeaveReviewPage({
-  endpoint = "/api/reviews",
-}: {
-  endpoint?: string;
-}) {
+function LeaveReviewPage({ endpoint = "/api/reviews" }: { endpoint?: string }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 py-16">
       {/* Background decorativo soft (clippato) */}
