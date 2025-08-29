@@ -36,7 +36,7 @@ const normAngle = (deg: number) => ((deg + 540) % 360) - 180; // -> [-180,180)
 // 2) Virtualize: render only a small window of neighbors around the active slide (default 7).
 // 3) Avoid per-item Framer Motion; only the center card uses motion values for tilt (no React re-render on pointer move).
 // 4) Lighter effects: reduced heavy blurs; CSS keyframes instead of motion where possible.
-// 5) content-visibility/contain to isolate painting and reduce layout thrash.
+// 5) Niente content-visibility sulle card: interferiva con il lazy loading.
 
 export default function TeamMembersList({
   compact = false,
@@ -152,6 +152,12 @@ export default function TeamMembersList({
     return arr;
   }, [active, members.length, half]);
 
+  // Distance in steps on a circular list → per preload hints
+  const stepDistance = (from: number, to: number, len: number) => {
+    const raw = Math.abs(from - to);
+    return Math.min(raw, len - raw);
+  };
+
   // Pointer tilt for center card only (no state updates)
   const onPointerMoveCenter = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (reduceMotion) return;
@@ -242,9 +248,38 @@ export default function TeamMembersList({
             backfaceVisibility: "hidden",
           };
 
+          // preload centrale e vicini ±1
+          const dist = stepDistance(idx, active, members.length);
+          const preload = dist <= 1;
+          const highPrio = isCenter;
+
           if (isCenter) {
             return (
               <div key={idx} style={commonStyle}>
+                {/* Preload vicini */}
+                {preload && (
+                  <>
+                    {members.length > 1 && (
+                      <link
+                        rel="preload"
+                        as="image"
+                        href={members[(active + 1) % members.length].imageUrl}
+                      />
+                    )}
+                    {members.length > 2 && (
+                      <link
+                        rel="preload"
+                        as="image"
+                        href={
+                          members[
+                            (active - 1 + members.length) % members.length
+                          ].imageUrl
+                        }
+                      />
+                    )}
+                  </>
+                )}
+
                 {/* Inner wrapper applies tilt without reflows */}
                 <motion.div style={{ rotateX: tiltX, rotateY: tiltY }}>
                   {/* Ombra */}
@@ -278,6 +313,10 @@ export default function TeamMembersList({
                         description={m.description ?? ""}
                         interactive
                         muted={false}
+                        // 👇 hint caricamento immagine
+                        priority={highPrio}
+                        loading={preload ? "eager" : "lazy"}
+                        decoding="async"
                       />
                     </div>
                   </button>
@@ -316,6 +355,10 @@ export default function TeamMembersList({
                     description={m.description ?? ""}
                     interactive={false}
                     muted
+                    // 👇 hint caricamento immagine
+                    priority={highPrio}
+                    loading={preload ? "eager" : "lazy"}
+                    decoding="async"
                   />
                 </div>
               </button>
