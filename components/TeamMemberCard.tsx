@@ -1,9 +1,10 @@
 // components/TeamMemberCard.tsx
 import React from "react";
 import Image from "next/image";
+import type { StaticImageData } from "next/image";
 
 export interface TeamMemberCardProps {
-  imageUrl: string;
+  imageUrl: string | StaticImageData;
   name: string;
   role: string;
   description?: string;

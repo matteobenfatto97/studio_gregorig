@@ -1,3 +1,4 @@
+// components/lists/TeamMembersList.tsx
 "use client";
 
 import React, {
@@ -15,11 +16,13 @@ import {
   useSpring,
 } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { teamMembers } from "@/lib/actions/teamMembers";
+import type { StaticImageData } from "next/image";
+// ✅ import relativo: niente più TS2307
+import { teamMembers } from "@/data/teamMembers";
 import TeamMembersCard from "../TeamMemberCard";
 
 interface Member {
-  imageUrl: string;
+  imageUrl: string | StaticImageData;
   name: string;
   role: string;
   description?: string;
@@ -29,7 +32,7 @@ const clamp = (n: number, min: number, max: number) =>
   Math.max(min, Math.min(max, n));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const toRad = (deg: number) => (deg * Math.PI) / 180;
-const normAngle = (deg: number) => ((deg + 540) % 360) - 180; // -> [-180,180)
+const normAngle = (deg: number) => ((deg + 540) % 360) - 180;
 
 export default function TeamMembersList({
   compact = false,
@@ -41,14 +44,16 @@ export default function TeamMembersList({
   const members = teamMembers as Member[];
 
   const [active, setActive] = useState(0);
-  const [itemWidth, setItemWidth] = useState(320);
+
+  // ⬇️ card più piccole
+  const [itemWidth, setItemWidth] = useState(280);
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion();
 
   // Geometry
   const baseDeg = Math.max(36, 360 / Math.max(6, members.length));
-  const radius = Math.min(itemWidth * 1.42, 460);
+  const radius = Math.min(itemWidth * 1.25, 420);
 
   // Tilt (center card only)
   const mvTiltX = useMotionValue(0);
@@ -63,14 +68,14 @@ export default function TeamMembersList({
     mvTiltY.set(0);
   };
 
-  // Resize -> recompute card width
+  // Resize → calcolo larghezza card (più conservativo)
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
     const compute = () => {
       const w = el.clientWidth;
-      const ideal = w / (compact ? 3.25 : 3.1);
-      setItemWidth(clamp(ideal, compact ? 220 : 240, compact ? 320 : 380));
+      const ideal = w / (compact ? 3.6 : 3.8);
+      setItemWidth(clamp(ideal, compact ? 180 : 200, compact ? 280 : 320));
     };
     compute();
     const ro = new ResizeObserver(compute);
@@ -111,11 +116,11 @@ export default function TeamMembersList({
     delta > 0 ? go("next") : go("prev");
   };
 
-  // Drag inertia (ref corretta al posto di 'press')
+  // Drag inertia
   const dragRef = useRef<{ x: number; at: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target.closest("[data-nodrag]")) return; // non attivare il drag su frecce/thumbs
+    if (target.closest("[data-nodrag]")) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { x: e.clientX, at: performance.now() };
   };
@@ -135,7 +140,7 @@ export default function TeamMembersList({
 
   const items = useMemo(() => members.map((m, i) => ({ ...m, i })), [members]);
 
-  // Virtualize indices around `active` within windowSize (must be odd)
+  // Virtualization window
   const half = Math.max(1, Math.floor(windowSize / 2));
   const virtualIndices = useMemo(() => {
     const arr: number[] = [];
@@ -173,8 +178,8 @@ export default function TeamMembersList({
         ref={viewportRef}
         className={`${
           compact
-            ? "h-[clamp(340px,46svh,520px)]"
-            : "h-[clamp(420px,58svh,620px)]"
+            ? "h-[clamp(300px,40svh,460px)]"
+            : "h-[clamp(360px,50svh,540px)]"
         } relative mx-auto flex items-center justify-center overflow-visible`}
         style={{ perspective: "1700px", transformStyle: "preserve-3d" as any }}
         onWheel={onWheel}
@@ -202,18 +207,9 @@ export default function TeamMembersList({
               boxShadow: "inset 0 0 36px rgba(255,255,255,0.05)",
             }}
           />
-          <div
-            className={`${
-              compact ? "h-64 w-64" : "h-80 w-80"
-            } absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-floatPulse`}
-            style={{
-              background:
-                "radial-gradient(closest-side, rgba(56,189,248,0.28), transparent)",
-            }}
-          />
         </div>
 
-        {/* CARDS (virtualized) */}
+        {/* CARDS */}
         {virtualIndices.map((idx) => {
           const m = items[idx];
           const angDeg = (idx - active) * baseDeg;
@@ -221,10 +217,15 @@ export default function TeamMembersList({
           const depth = (Math.cos(toRad(angNorm)) + 1) / 2; // 0..1
           const isCenter = idx === active;
 
-          const scale = isCenter ? (compact ? 1.1 : 1.18) : 0.9 + depth * 0.18;
+          // ⬇️ scale più sobria
+          const scale = isCenter
+            ? compact
+              ? 1.06
+              : 1.08
+            : 0.86 + depth * 0.16;
           const zi = Math.round(10 + depth * 90);
-          const zBoost = Math.max(0, 34 - Math.abs(angNorm) * 1.0);
-          const extraX = Math.sign(angNorm) * Math.pow(1 - depth, 1.12) * 64;
+          const zBoost = Math.max(0, 28 - Math.abs(angNorm) * 1.0);
+          const extraX = Math.sign(angNorm) * Math.pow(1 - depth, 1.12) * 44;
 
           const baseTransform = `translate(-50%, -50%) translateX(${extraX}px) rotateY(${angNorm}deg) translateZ(${radius + zBoost}px) scale(${scale})`;
 
@@ -248,7 +249,6 @@ export default function TeamMembersList({
 
           const dist = stepDistance(idx, active, members.length);
           const eager = dist <= half;
-          const highPrio = isCenter;
 
           if (isCenter) {
             return (
@@ -263,7 +263,7 @@ export default function TeamMembersList({
                         "radial-gradient(closest-side, rgba(0,0,0,0.4), transparent)",
                       filter: "blur(14px)",
                       opacity: 0.85,
-                      transform: "scale(1.2)",
+                      transform: "scale(1.1)",
                     }}
                   />
                   <button
@@ -277,19 +277,14 @@ export default function TeamMembersList({
                       className="w-[--w]"
                       style={{ ["--w" as any]: `${itemWidth - 8}px` }}
                     >
-                      // --- CARTE LATERALI ---
+                      {/* CARD CENTRALE */}
                       <MemoTeamMembersCard
-                        imageUrl={m.imageUrl}
+                        imageUrl={m.imageUrl as any}
                         name={m.name}
                         role={m.role}
                         description={m.description ?? ""}
-                        interactive={false}
-                        muted
-                        // 👇 nuove prop pass-through per Next/Image
-                        imgPriority={highPrio}
-                        imgLoading={eager ? "eager" : "lazy"}
-                        imgDecoding="async"
-                        sizes="(max-width: 640px) 52vw, (max-width: 1024px) 320px, 380px"
+                        interactive
+                        muted={false}
                       />
                     </div>
                   </button>
@@ -298,6 +293,7 @@ export default function TeamMembersList({
             );
           }
 
+          // Lateral cards
           return (
             <div key={idx} style={commonStyle}>
               {/* Ombra */}
@@ -309,7 +305,7 @@ export default function TeamMembersList({
                     "radial-gradient(closest-side, rgba(0,0,0,0.35), transparent)",
                   filter: "blur(14px)",
                   opacity: 0.45,
-                  transform: "scale(0.95)",
+                  transform: "scale(0.9)",
                 }}
               />
               <button
@@ -321,19 +317,14 @@ export default function TeamMembersList({
                   className="w-[--w]"
                   style={{ ["--w" as any]: `${itemWidth - 8}px` }}
                 >
-                  // --- CARD CENTRALE ---
+                  {/* CARTE LATERALI */}
                   <MemoTeamMembersCard
-                    imageUrl={m.imageUrl}
+                    imageUrl={m.imageUrl as any}
                     name={m.name}
                     role={m.role}
                     description={m.description ?? ""}
-                    interactive
-                    muted={false}
-                    // 👇 nuove prop pass-through per Next/Image
-                    imgPriority={highPrio}
-                    imgLoading="eager"
-                    imgDecoding="async"
-                    sizes="(max-width: 640px) 68vw, (max-width: 1024px) 360px, 420px"
+                    interactive={false}
+                    muted
                   />
                 </div>
               </button>
@@ -348,17 +339,17 @@ export default function TeamMembersList({
         >
           <button
             aria-label="Precedente"
-            className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
+            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
             onClick={() => go("prev")}
           >
-            <ChevronLeft className="h-7 w-7" strokeWidth={3} />
+            <ChevronLeft className="h-6 w-6" strokeWidth={3} />
           </button>
           <button
             aria-label="Successivo"
-            className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
+            className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
             onClick={() => go("next")}
           >
-            <ChevronRight className="h-7 w-7" strokeWidth={3} />
+            <ChevronRight className="h-6 w-6" strokeWidth={3} />
           </button>
         </div>
       </div>
@@ -416,7 +407,7 @@ function ThumbRail({
             <button
               key={i}
               onClick={() => onSelect(i)}
-              className={`relative h-12 w-12 overflow-hidden rounded-full ring-1 ring-white/20 transition ${
+              className={`relative h-10 w-10 overflow-hidden rounded-full ring-1 ring-white/20 transition ${
                 is
                   ? "scale-110 ring-cyan-300/60 shadow-[0_0_30px_-6px_rgba(34,211,238,0.55)]"
                   : "opacity-80 hover:opacity-100"
@@ -429,7 +420,12 @@ function ThumbRail({
                 className={`absolute inset-0 bg-cover bg-center ${
                   is ? "saturate-125 contrast-110" : "grayscale"
                 }`}
-                style={{ backgroundImage: `url(${m.imageUrl})` }}
+                style={{
+                  backgroundImage:
+                    typeof m.imageUrl === "string"
+                      ? `url(${m.imageUrl})`
+                      : `url(${(m.imageUrl as any).src})`,
+                }}
               />
               <span
                 className={`absolute inset-0 ${
