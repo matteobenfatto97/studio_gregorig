@@ -1,5 +1,3 @@
-"use-client";
-
 // app/(site)/chi-siamo/page.tsx (optimized, no TS errors)
 import type { Metadata } from "next";
 import Script from "next/script";
@@ -161,16 +159,7 @@ export default function ChiSiamoPage() {
         </section>
 
         {/* TEAM (defer + ultra fast) */}
-        <section
-          aria-label="Il nostro team"
-          className="py-16"
-          // Evita lavoro di layout/paint finché offscreen, mantiene dimensioni intrinseche per evitare CLS
-          style={{
-            contentVisibility: "auto",
-            containIntrinsicSize: "660px 1000px",
-            contain: "layout paint style" as any,
-          }}
-        >
+        <section aria-label="Il nostro team" className="py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-center text-2xl font-semibold sm:text-3xl">
               Il nostro Team
@@ -181,7 +170,7 @@ export default function ChiSiamoPage() {
             </p>
             <div className="py-16 mt-6">
               {/* Carosello: versione 2D super-performante, finestra ristretta */}
-              <TeamMembersList windowSize={5} />
+              <TeamMembersList windowSize={5} compact />
             </div>
           </div>
         </section>
@@ -246,13 +235,7 @@ export default function ChiSiamoPage() {
         </section>
 
         {/* Chatbot floating: caricato lato client, non blocca la pagina */}
-        <div
-          className="fixed bottom-6 right-6 z-40"
-          style={{
-            contentVisibility: "auto",
-            contain: "layout paint style" as any,
-          }}
-        >
+        <div className="fixed bottom-6 right-6 z-40">
           <LiveChat />
         </div>
       </main>

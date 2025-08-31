@@ -31,13 +31,6 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 const normAngle = (deg: number) => ((deg + 540) % 360) - 180; // -> [-180,180)
 
-// ---- PERF HINTS ----
-// 1) No autoplay. Purely user-driven (arrows, wheel, drag, thumbs).
-// 2) Virtualize: render only a small window of neighbors around the active slide (default 7).
-// 3) Avoid per-item Framer Motion; only the center card uses motion values for tilt (no React re-render on pointer move).
-// 4) Lighter effects: reduced heavy blurs; CSS keyframes instead of motion where possible.
-// 5) Niente content-visibility sulle card: interferiva con il lazy loading.
-
 export default function TeamMembersList({
   compact = false,
   windowSize = 7,
@@ -57,9 +50,9 @@ export default function TeamMembersList({
   const baseDeg = Math.max(36, 360 / Math.max(6, members.length));
   const radius = Math.min(itemWidth * 1.42, 460);
 
-  // Tilt (center card only) via motion values (no React state updates on move)
-  const mvTiltX = useMotionValue(0); // rotateX
-  const mvTiltY = useMotionValue(0); // rotateY micro-tilt
+  // Tilt (center card only)
+  const mvTiltX = useMotionValue(0);
+  const mvTiltY = useMotionValue(0);
   const tiltX = useSpring(mvTiltX, { stiffness: 140, damping: 18, mass: 0.6 });
   const tiltY = useSpring(mvTiltY, { stiffness: 140, damping: 18, mass: 0.6 });
 
@@ -118,18 +111,20 @@ export default function TeamMembersList({
     delta > 0 ? go("next") : go("prev");
   };
 
-  // Drag inertia (unchanged, but without autoplay interactions)
-  const press = useRef<{ x: number; at: number } | null>(null);
-  const onPointerDown = (e: React.PointerEvent) => {
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-    press.current = { x: e.clientX, at: performance.now() };
+  // Drag inertia (ref corretta al posto di 'press')
+  const dragRef = useRef<{ x: number; at: number } | null>(null);
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-nodrag]")) return; // non attivare il drag su frecce/thumbs
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { x: e.clientX, at: performance.now() };
   };
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (!press.current) return;
-    const dx = e.clientX - press.current.x;
-    const dt = Math.max(1, performance.now() - press.current.at);
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.x;
+    const dt = Math.max(1, performance.now() - dragRef.current.at);
     const v = dx / dt; // px/ms
-    press.current = null;
+    dragRef.current = null;
     const step = Math.round(dx / 160 + v * 6);
     if (step === 0) return;
     setActive(
@@ -152,18 +147,17 @@ export default function TeamMembersList({
     return arr;
   }, [active, members.length, half]);
 
-  // Distance in steps on a circular list → per preload hints
   const stepDistance = (from: number, to: number, len: number) => {
     const raw = Math.abs(from - to);
     return Math.min(raw, len - raw);
   };
 
-  // Pointer tilt for center card only (no state updates)
+  // Tilt pointer move
   const onPointerMoveCenter = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (reduceMotion) return;
     const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width; // 0..1
-    const y = (e.clientY - r.top) / r.height; // 0..1
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
     mvTiltY.set(lerp(-8, 8, x));
     mvTiltX.set(lerp(6, -6, y));
   };
@@ -177,13 +171,17 @@ export default function TeamMembersList({
     >
       <div
         ref={viewportRef}
-        className={`${compact ? "h-[420px] sm:h-[460px] md:h-[500px]" : "h-[560px] sm:h-[620px] md:h-[660px]"} relative mx-auto flex items-center justify-center overflow-visible`}
+        className={`${
+          compact
+            ? "h-[clamp(340px,46svh,520px)]"
+            : "h-[clamp(420px,58svh,620px)]"
+        } relative mx-auto flex items-center justify-center overflow-visible`}
         style={{ perspective: "1700px", transformStyle: "preserve-3d" as any }}
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
-        {/* BACKDROP (lighter) */}
+        {/* BACKDROP */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0"
@@ -205,7 +203,9 @@ export default function TeamMembersList({
             }}
           />
           <div
-            className={`${compact ? "h-64 w-64" : "h-80 w-80"} absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-floatPulse`}
+            className={`${
+              compact ? "h-64 w-64" : "h-80 w-80"
+            } absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl animate-floatPulse`}
             style={{
               background:
                 "radial-gradient(closest-side, rgba(56,189,248,0.28), transparent)",
@@ -223,7 +223,6 @@ export default function TeamMembersList({
 
           const scale = isCenter ? (compact ? 1.1 : 1.18) : 0.9 + depth * 0.18;
           const zi = Math.round(10 + depth * 90);
-          const opacity = isCenter ? 1 : 0.92;
           const zBoost = Math.max(0, 34 - Math.abs(angNorm) * 1.0);
           const extraX = Math.sign(angNorm) * Math.pow(1 - depth, 1.12) * 64;
 
@@ -237,50 +236,23 @@ export default function TeamMembersList({
             transformStyle: "preserve-3d",
             zIndex: zi,
             visibility: "visible",
-            pointerEvents: isCenter ? "auto" : "none",
+            pointerEvents: "auto",
             willChange: "transform, opacity",
             transform: baseTransform,
             transition: reduceMotion
               ? undefined
               : "transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease-out",
             contain: "layout paint style",
-            // Help the GPU
             backfaceVisibility: "hidden",
           };
 
-          // preload centrale e vicini ±1
           const dist = stepDistance(idx, active, members.length);
-          const preload = dist <= 1;
+          const eager = dist <= half;
           const highPrio = isCenter;
 
           if (isCenter) {
             return (
               <div key={idx} style={commonStyle}>
-                {/* Preload vicini */}
-                {preload && (
-                  <>
-                    {members.length > 1 && (
-                      <link
-                        rel="preload"
-                        as="image"
-                        href={members[(active + 1) % members.length].imageUrl}
-                      />
-                    )}
-                    {members.length > 2 && (
-                      <link
-                        rel="preload"
-                        as="image"
-                        href={
-                          members[
-                            (active - 1 + members.length) % members.length
-                          ].imageUrl
-                        }
-                      />
-                    )}
-                  </>
-                )}
-
-                {/* Inner wrapper applies tilt without reflows */}
                 <motion.div style={{ rotateX: tiltX, rotateY: tiltY }}>
                   {/* Ombra */}
                   <div
@@ -294,29 +266,30 @@ export default function TeamMembersList({
                       transform: "scale(1.2)",
                     }}
                   />
-
                   <button
                     aria-label={`${m.name}, card attiva`}
                     onPointerMove={onPointerMoveCenter}
                     onPointerLeave={resetTilt}
-                    onClick={() => setActive(idx)}
-                    className={`group relative block rounded-2xl border border-white/10 bg-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 ring-1 ring-white/10 shadow-[0_28px_120px_-24px_rgba(56,189,248,0.45)]`}
+                    onClick={() => go("next")}
+                    className="group relative block rounded-2xl border border-white/10 bg-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 ring-1 ring-white/10 shadow-[0_28px_120px_-24px_rgba(56,189,248,0.45)]"
                   >
                     <div
                       className="w-[--w]"
                       style={{ ["--w" as any]: `${itemWidth - 8}px` }}
                     >
+                      // --- CARTE LATERALI ---
                       <MemoTeamMembersCard
                         imageUrl={m.imageUrl}
                         name={m.name}
                         role={m.role}
                         description={m.description ?? ""}
-                        interactive
-                        muted={false}
-                        // 👇 hint caricamento immagine
-                        priority={highPrio}
-                        loading={preload ? "eager" : "lazy"}
-                        decoding="async"
+                        interactive={false}
+                        muted
+                        // 👇 nuove prop pass-through per Next/Image
+                        imgPriority={highPrio}
+                        imgLoading={eager ? "eager" : "lazy"}
+                        imgDecoding="async"
+                        sizes="(max-width: 640px) 52vw, (max-width: 1024px) 320px, 380px"
                       />
                     </div>
                   </button>
@@ -342,23 +315,25 @@ export default function TeamMembersList({
               <button
                 aria-label={`Vai a ${m.name}`}
                 onClick={() => setActive(idx)}
-                className={`relative block rounded-2xl border border-white/10 bg-transparent p-1 opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60`}
+                className="relative block rounded-2xl border border-white/10 bg-transparent p-1 opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
               >
                 <div
                   className="w-[--w]"
                   style={{ ["--w" as any]: `${itemWidth - 8}px` }}
                 >
+                  // --- CARD CENTRALE ---
                   <MemoTeamMembersCard
                     imageUrl={m.imageUrl}
                     name={m.name}
                     role={m.role}
                     description={m.description ?? ""}
-                    interactive={false}
-                    muted
-                    // 👇 hint caricamento immagine
-                    priority={highPrio}
-                    loading={preload ? "eager" : "lazy"}
-                    decoding="async"
+                    interactive
+                    muted={false}
+                    // 👇 nuove prop pass-through per Next/Image
+                    imgPriority={highPrio}
+                    imgLoading="eager"
+                    imgDecoding="async"
+                    sizes="(max-width: 640px) 68vw, (max-width: 1024px) 360px, 420px"
                   />
                 </div>
               </button>
@@ -367,7 +342,10 @@ export default function TeamMembersList({
         })}
 
         {/* FRECCE */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-50 flex items-center justify-between px-2">
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 right-0 z-[200] flex items-center justify-between px-2"
+          data-nodrag
+        >
           <button
             aria-label="Precedente"
             className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-slate-900/90 to-slate-800/90 text-white shadow-[0_16px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/20 backdrop-blur-xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80"
@@ -385,7 +363,7 @@ export default function TeamMembersList({
         </div>
       </div>
 
-      {/* THUMB RAIL (no progress bar, memoized) */}
+      {/* THUMB RAIL */}
       <MemoThumbRail
         members={members}
         active={active}
@@ -430,7 +408,7 @@ function ThumbRail({
   onSelect: (i: number) => void;
 }) {
   return (
-    <div className="mt-6 flex w-full items-center justify-center">
+    <div className="mt-6 flex w-full items-center justify-center" data-nodrag>
       <div className="flex max-w-3xl flex-wrap items-center justify-center gap-3 px-2">
         {members.map((m, i) => {
           const is = i === active;
@@ -438,17 +416,25 @@ function ThumbRail({
             <button
               key={i}
               onClick={() => onSelect(i)}
-              className={`relative h-12 w-12 overflow-hidden rounded-full ring-1 ring-white/20 transition ${is ? "scale-110 ring-cyan-300/60 shadow-[0_0_30px_-6px_rgba(34,211,238,0.55)]" : "opacity-80 hover:opacity-100"}`}
+              className={`relative h-12 w-12 overflow-hidden rounded-full ring-1 ring-white/20 transition ${
+                is
+                  ? "scale-110 ring-cyan-300/60 shadow-[0_0_30px_-6px_rgba(34,211,238,0.55)]"
+                  : "opacity-80 hover:opacity-100"
+              }`}
               aria-label={`Vai a ${m.name}`}
               aria-current={is}
               title={m.name}
             >
               <span
-                className={`absolute inset-0 bg-cover bg-center ${is ? "saturate-125 contrast-110" : "grayscale"}`}
+                className={`absolute inset-0 bg-cover bg-center ${
+                  is ? "saturate-125 contrast-110" : "grayscale"
+                }`}
                 style={{ backgroundImage: `url(${m.imageUrl})` }}
               />
               <span
-                className={`absolute inset-0 ${is ? "bg-black/0" : "bg-black/5"}`}
+                className={`absolute inset-0 ${
+                  is ? "bg-black/0" : "bg-black/5"
+                }`}
               />
             </button>
           );
