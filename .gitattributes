@@ -1,9 +1,11 @@
-*.png filter=lfs diff=lfs merge=lfs -text
-*.jpg filter=lfs diff=lfs merge=lfs -text
+# LFS per immagini (fuori da /public)
+*.png  filter=lfs diff=lfs merge=lfs -text
+*.jpg  filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
-*.JPG filter=lfs diff=lfs merge=lfs -text
+*.JPG  filter=lfs diff=lfs merge=lfs -text
+
+# Esempio di cartella che può restare in LFS
 Foto_Team_Macchina/** filter=lfs diff=lfs merge=lfs -text
-public/assets/**/*.{png filter=lfs diff=lfs merge=lfs -text
-jpg filter=lfs diff=lfs merge=lfs -text
-jpeg filter=lfs diff=lfs merge=lfs -text
-JPG} filter=lfs diff=lfs merge=lfs -text
+
+# >>> DISABILITA LFS sotto /public (questa riga DEVE stare in fondo per vincere)
+public/** -filter -diff -merge -text
