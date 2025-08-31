@@ -1,70 +1,58 @@
 // data/teamMembers.ts
-import type { StaticImageData } from "next/image";
-
-// 🔒 Importa TUTTE le immagini dalla cartella public (case-sensitive in prod)
-import drGregorig from "@/public/assets/team/dr.Gregorig.png";
-import drCarla from "@/public/assets/team/dr.ssaCarla.png";
-import drGiulia from "@/public/assets/team/dr.ssaGiulia.png";
-import drAnna from "@/public/assets/team/dr.ssaAnna.png";
-import fabrizia from "@/public/assets/team/fabrizia.png";
-import jessica from "@/public/assets/team/jessica.png";
-import agnese from "@/public/assets/team/agnese.png";
-import alessandra from "@/public/assets/team/alessandra.png";
-
-export type TeamMember = {
-  imageUrl: StaticImageData;
+export type Member = {
+  imageUrl: string;
   name: string;
   role: string;
   description?: string;
 };
 
-export const teamMembers: TeamMember[] = [
+export const teamMembers: Member[] = [
   {
-    imageUrl: drGregorig,
+    imageUrl: "/assets/team/dr.Gregorig.png",
     name: "Dr. Gianluca Gregorig",
-    role: "Chirurgo dentale",
+    role: "Chirurgo Dentale",
     description:
       "Specializzato in chirurgia dentale e implantologia, con oltre 25 anni di esperienza.",
   },
   {
-    imageUrl: drCarla,
+    imageUrl: "/assets/team/dr.ssaCarla.png",
     name: "Dr.ssa Carla Fonda",
     role: "Ortodonzia",
     description:
       "Esperta in ortodonzia con un approccio moderno e personalizzato.",
   },
   {
-    imageUrl: drGiulia,
+    imageUrl: "/assets/team/dr.ssaGiulia.png",
     name: "Dr.ssa Giulia Piller",
     role: "Igienista dentale",
     description: "",
   },
   {
-    imageUrl: drAnna,
+    imageUrl: "/assets/team/dr.ssaAnna.png",
     name: "Dr.ssa Anna di Piazza",
-    role: "Igienista dentale",
+    role: "Igienista Dentale",
     description: "",
   },
   {
-    imageUrl: fabrizia,
+    imageUrl: "/assets/team/fabrizia.png",
     name: "Fabrizia de Candido",
     role: "Assistente alla poltrona",
     description: "",
   },
   {
-    imageUrl: jessica,
+    imageUrl: "/assets/team/jessica.png",
     name: "Jessica Zanardo",
     role: "Assistente alla poltrona",
     description: "",
   },
   {
-    imageUrl: agnese,
+    imageUrl: "/assets/team/agnese.png",
     name: "Agnese Menardi",
     role: "Assistente alla poltrona",
     description: "",
   },
   {
-    imageUrl: alessandra,
+    imageUrl: "/assets/team/alessandra.png",
     name: "Alessandra Marta",
     role: "Assistente alla poltrona",
     description: "",
